@@ -4,7 +4,8 @@
       "chimpook/cataas-api-php": "v1.0.5",
       "ext-json": "*",
       "ext-curl": "*",
-      "vlucas/phpdotenv": "*"
+      "vlucas/phpdotenv": "*",
+      "faapz/pdo": "*"
     },
     "autoload": {
       "psr-4": {

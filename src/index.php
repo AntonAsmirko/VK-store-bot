@@ -4,13 +4,37 @@ require_once "vendor/autoload.php";
 
 use VK\CallbackApi\Server\VKCallbackApiServerHandler;
 use VK\Client\VKApiClient;
+use \PDO;
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
+class Repository{
+
+    private $PDO;
+
+    public function __construct(){
+        $this->PDO = new PDO("pgsql:host=pgdb;dbname=anton1", "anton1", "anton");
+    }
+
+    public function getCategories(){
+        $result_array = array();
+        $query_res = $this->PDO->query("SELECT * FROM categories");
+        $rows = $query_res->fetchAll();
+        foreach($rows as $row) {
+            array_push($result_array, "
+                $row[1] (id: $row[0])\n
+                $row[2]
+            ");
+        }
+        return $result_array;
+    }
+}
+
 class CommandHandler {
 
     private $vkApi;
+    private $repository;
 
     private $onboardingInfo = "
         Привет! Я бот магазина SUPERSHOP!
@@ -24,6 +48,7 @@ class CommandHandler {
     public function __construct($vkApi)
     {
         $this->vkApi = $vkApi;
+        $this->repository = new Repository();
     }
 
     public function handleCommand(array $object)
@@ -32,7 +57,10 @@ class CommandHandler {
         $command = $msq->text;
 
         if (str_starts_with($command, "каталог")){
-            $this->sendMessage($object, "Вывожу каталог");
+            $categories = $this->repository->getCategories();
+            foreach($categories as $category){
+                $this->sendMessage($object, $category);    
+            }
         } elseif (str_starts_with($command, "начать")) {
             $this->sendMessage($object, $this->onboardingInfo);
         }

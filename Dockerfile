@@ -8,6 +8,7 @@ RUN apt-get install -y bash
 RUN apt-get install -y nginx
 RUN apt-get install -y php8.1 php8.1-fpm php8.1-opcache
 RUN apt-get install -y php8.1-gd php8.1-curl
+RUN apt-get install -y php8.1-pgsql
 RUN apt-get install -y php-cli unzip less
 RUN apt-get install curl
 RUN curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php

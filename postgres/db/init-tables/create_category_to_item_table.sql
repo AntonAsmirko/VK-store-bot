@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS category_to_item(
+    CAT_ID INT NOT NULL,
+    ITEM_ID INT NOT NULL
+);

@@ -1,0 +1,29 @@
+services:
+  web:
+    build: .
+    depends_on:
+      - pgdb
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - network-one
+    volumes:
+      - pg_volume:/var/run/postgresql
+    container_name: shop-web
+  pgdb:
+    build: ./postgres/
+    ports: 
+      - 5432:5432
+    networks:
+      - network-one
+    volumes:
+      - pg_volume:/var/run/postgresql
+    container_name: shop-db
+    
+
+networks:
+  network-one:
+    name: network-one
+volumes:
+  pg_volume:
