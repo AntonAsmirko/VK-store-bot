@@ -17,15 +17,34 @@ class Repository{
         $this->PDO = new PDO("pgsql:host=pgdb;dbname=anton1", "anton1", "anton");
     }
 
-    public function getCategories(){
+    public function getCategories() {
         $result_array = array();
-        $query_res = $this->PDO->query("SELECT * FROM categories");
+        $query_res = $this->PDO->query("SELECT * FROM category");
         $rows = $query_res->fetchAll();
         foreach($rows as $row) {
-            array_push($result_array, "
-                $row[1] (id: $row[0])\n
-                $row[2]
-            ");
+            array_push($result_array, "$row[1] (id: $row[0])\n$row[2]");
+        }
+        return $result_array;
+    }
+
+    public function getItemsByCategory($categoryId) {
+        $result_array = array();
+        $query_res = $this->PDO->query("SELECT * from 
+            item JOIN category_to_item ON item.ID = category_to_item.ITEM_ID 
+            WHERE category_to_item.CAT_ID = $categoryId");
+        $rows = $query_res->fetchAll();
+        foreach($rows as $row) {
+            array_push($result_array, "$row[1]\nОписание товара:\n$row[2]\nСтоимость:$row[3]₽");
+        }
+        return $result_array;
+    }
+
+    public function getItemInfo($itemName) {
+        $result_array = array();
+        $query_res = $this->PDO->query("SELECT * FROM item WHERE item.ITEM_NAME = $itemName");
+        $rows = $query_res->fetchAll();
+        foreach($rows as $row) {
+            array_push($result_array, "$row[1]\nОписание товара:\n$row[2]\nСтоимость:$row[3]₽");
         }
         return $result_array;
     }
@@ -38,11 +57,11 @@ class CommandHandler {
 
     private $onboardingInfo = "
         Привет! Я бот магазина SUPERSHOP!
-        У меня вы можете посмотреть каталог магазина и описание товаров.
-        Список команд, которые я понимаю:
-        💥 категории - посмотреть категории товаров в магазине
-        💥 каталог <категория> - посмотреть товары, представленные в категории
-        💥 товар <id> - посмотреть описание товара с данным id
+У меня вы можете посмотреть каталог магазина и описание товаров.
+Список команд, которые я понимаю:
+💥 категории - посмотреть категории товаров в магазине
+💥 каталог <категория> - посмотреть товары, представленные в категории
+💥 товар <id> - посмотреть описание товара с данным id
     ";
 
     public function __construct($vkApi)
@@ -64,12 +83,17 @@ class CommandHandler {
         } elseif (str_starts_with($command, "начать")) {
             $this->sendMessage($object, $this->onboardingInfo);
         }
-         elseif (str_starts_with($command, "категории")) {
+         elseif (str_starts_with($command, "категория")) {
             $categoryId = explode(" ", $command)[1];
-            $this->sendMessage($object, "Вывожу категорию $categoryId");
+            $items = $this->repository->getItemsByCategory(intval($categoryId));
+            foreach($items as $item) {
+                $this->sendMessage($object, $item);
+            }
         } elseif (str_starts_with($command, "товар")) {
-            $itemId = explode(" ", $command)[1];
-            $this->sendMessage($object, "интфа про товар $itemId");
+            $itemName = explode(" ", $command)[1];
+            $item = $this->repository->getItemInfo($itemName);
+            $this->sendMessage($object, $itemName);
+            
         } elseif (str_starts_with($command, "Сашу")) {
             $this->sendMessage($object, "люблю❤️");
         }        
