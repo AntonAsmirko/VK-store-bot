@@ -22,7 +22,7 @@ COPY src /usr/share/nginx/html
 EXPOSE 80
 EXPOSE 443
 
-RUN cd /usr/share/nginx/html && composer update
+RUN cd /usr/share/nginx/html && composer install && composer update 
 
 STOPSIGNAL SIGTERM
 
