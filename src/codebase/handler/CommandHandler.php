@@ -30,7 +30,7 @@ class CommandHandler {
     {
         $this->env = $env;
         $this->vkApi = $vkApi;
-        $pdo = new PDO("pgsql:host=pgdb;dbname=anton1", "anton1", "anton");
+        $pdo = new PDO("pgsql:host=pgdb;dbname=anton1", $this->env['POSTGRES_USER'], $this->env['POSTGRES_PASSWORD']);
         $this->catalogRepository = new CatalogRepository($pdo);
         $this->adminRepository = new AdminRepository($pdo, $this->env['ADMINS']);
         $this->adminRepository->loadAdmins();

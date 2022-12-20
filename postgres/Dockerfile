@@ -1,8 +1,5 @@
 FROM postgres:15.1
 
-ENV POSTGRES_PASSWORD "anton"
-ENV POSTGRES_USER "anton1"
-
 COPY db /db
 COPY filldb.sh filldb.sh 
 
