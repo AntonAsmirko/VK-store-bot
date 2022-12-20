@@ -94,6 +94,21 @@ class CatalogRepository{
         $this->PDO->query("INSERT INTO category_to_item (CAT_ID, ITEM_ID)
                              VALUES ($categoryId, $itemId);");
     }
+
+    public function addCategory($id, $catName, $description, $mediaId){
+        $this->PDO->query("INSERT INTO category (ID, CAT_NAME, CAT_DESCRIPTION, MEDIA_ID)
+        VALUES ($id,'$catName','$description', '$mediaId')");
+    }
+
+    public function removeItem($itemId) {
+        $this->PDO->query("DELETE FROM item WHERE ID = $itemId");
+        $this->PDO->query("DELETE FROM category_to_item WHERE ITEM_ID = $itemId");
+    }
+
+    public function removeCategory($catId){
+        $this->PDO->query("DELETE FROM category WHERE ID = $catId");
+        $this->PDO->query("DELETE FROM category_to_item WHERE CAT_ID = $catId");
+    }
 }
 
 class CommandHandler {
@@ -107,9 +122,9 @@ class CommandHandler {
         Привет! Я бот магазина SUPERSHOP!
 У меня вы можете посмотреть каталог магазина и описание товаров.
 Список команд, которые я понимаю:
-💥 категории - посмотреть категории товаров в магазине
-💥 каталог <категория> - посмотреть товары, представленные в категории
-💥 товар <id> - посмотреть описание товара с данным id
+💥 каталог - посмотреть категории товаров в магазине
+💥 категория <id категории> - посмотреть товары, представленные в категории
+💥 товар <id товара> - посмотреть описание товара с данным id
     ";
 
     public function __construct($vkApi)
@@ -128,8 +143,12 @@ class CommandHandler {
 
         if (str_starts_with($command, "каталог")){
             $categories = $this->catalogRepository->getCategories();
-            foreach($categories as $category){
-                $this->sendMessage($object, $category[0], $category[1]);    
+            if(!empty($categories)){
+                foreach($categories as $category){
+                    $this->sendMessage($object, $category[0], $category[1]);    
+                }
+            } else {
+                $this->sendMessage($object, "категории пусты");    
             }
         } elseif (str_starts_with($command, "начать")) {
             $this->sendMessage($object, $this->onboardingInfo);
@@ -137,8 +156,12 @@ class CommandHandler {
          elseif (str_starts_with($command, "категория")) {
             $categoryId = explode(" ", $command)[1];
             $items = $this->catalogRepository->getItemsByCategory(intval($categoryId));
-            foreach($items as $item) {
-                $this->sendMessage($object, $item[0], $item[1]);
+            if(!empty($items)){
+                foreach($items as $item) {
+                    $this->sendMessage($object, $item[0], $item[1]);
+                }
+            } else {
+                $this->sendMessage($object, "эта категория товаров пуста");
             }
         } elseif (str_starts_with($command, "товар")) {
             $itemName = explode(" ", $command)[1];
@@ -147,7 +170,7 @@ class CommandHandler {
             
         } elseif (str_starts_with($command, "Сашу")) {
             $this->sendMessage($object, "люблю❤️");
-        } elseif (str_starts_with($command, "Add")) {
+        } elseif (str_starts_with($command, "AddItem")) {
             if($this->adminRepository->isAdmin($msq->from_id)){
                 $items = explode("$", $command);
                 $categoryId = $items[1];
@@ -168,7 +191,37 @@ class CommandHandler {
             } else {
                 $this->sendMessage($object, "Ты не админ🤬");
             }
-        }       
+        } elseif(str_starts_with($command, "AddCat")) {
+            if($this->adminRepository->isAdmin($msq->from_id)){
+                $items = explode("$", $command);
+                $categoryId = $items[1];
+                $catName = $items[2];
+                $description = $items[3];
+                $mediaId = $items[4];
+                $this->catalogRepository->addCategory($categoryId, $catName, $description, $mediaId);
+                $this->sendMessage($object, "🥳Категория товаров успешно добавлена🥳");
+            } else {
+                $this->sendMessage($object, "Ты не админ🤬");
+            }
+        } else if(str_starts_with($command, "RmCat")){
+            if ($this->adminRepository->isAdmin($msq->from_id)) {
+                $items = explode("$", $command);
+                $catId = $items[1];
+                $this->catalogRepository->removeCategory(intval($catId));
+                $this->sendMessage($object, "🗑️Категория товаров успешно удалена🗑️");
+            } else {
+                $this->sendMessage($object, "Ты не админ🤬");
+            }
+        } else if(str_starts_with($command, "RmItem")) {
+            if ($this->adminRepository->isAdmin($msq->from_id)) {
+                $items = explode("$", $command);
+                $itemId = $items[1];
+                $this->catalogRepository->removeItem(intval($itemId));
+                $this->sendMessage($object, "🗑️Товаров успешно удален🗑️");
+            } else {
+                $this->sendMessage($object, "Ты не админ🤬");
+            }
+        }
     }
 
     private function sendMessage(array $object, string $responce, ?string $attachment = null)
